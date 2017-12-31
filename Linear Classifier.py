@@ -10,11 +10,11 @@ def stepFunction(t):
     return 0
 
 
-def prediction(X, W, b):
-    output = np.empty_like(X)
-    for i in range(len(X)):
+def prediction(X, W, b, y):
+    output = np.empty_like(y)
+    for i in range(len(y)):
         output[i] = stepFunction((np.matmul(X, W) + b)[i])
-        return np.shape(output)
+    return (output)
 
 
 # TODO: Fill in the code below to implement the perceptron trick.
@@ -23,16 +23,15 @@ def prediction(X, W, b):
 # update the weights and bias W, b, according to the perceptron algorithm,
 # and return W and b.
 def perceptronStep(X, y, W, b, learn_rate=0.01):
-    print(prediction(X, W, b))
-    #    for i in range(len(y)):
-    #        if prediction(X, W, b) > y[i]:
-    #            W[0] = W[0] - X[i, 0]*learn_rate
-    #            W[1] = W[1] - X[i, 1]*learn_rate
-    #            b = b - learn_rate
-    #        elif prediction(X, W, b) < y[i]:
-    #           W[0] = W[0] + X[i, 0]*learn_rate
-    #           W[1] = W[1] + X[i, 1]*learn_rate
-    #           b = b + learn_rate
+    for i in range(len(y)):
+        if prediction(X, W, b, y)[i] > y[i]:
+            W[0] = W[0] - X[i, 0] * learn_rate
+            W[1] = W[1] - X[i, 1] * learn_rate
+            b = b - learn_rate
+        elif prediction(X, W, b, y)[i] < y[i]:
+            W[0] = W[0] + X[i, 0] * learn_rate
+            W[1] = W[1] + X[i, 1] * learn_rate
+            b = b + learn_rate
     return W, b
 
 
@@ -41,7 +40,7 @@ def perceptronStep(X, y, W, b, learn_rate=0.01):
 # for plotting purposes.
 # Feel free to play with the learning rate and the num_epochs,
 # and see your results plotted below.
-def trainPerceptronAlgorithm(X, y, learn_rate=0.01, num_epochs=150):
+def trainPerceptronAlgorithm(X, y, learn_rate=0.01, num_epochs=75):
     x_min, x_max = min(X.T[0]), max(X.T[0])
     y_min, y_max = min(X.T[1]), max(X.T[1])
     W = np.array(np.random.rand(2, 1))
@@ -53,4 +52,3 @@ def trainPerceptronAlgorithm(X, y, learn_rate=0.01, num_epochs=150):
         W, b = perceptronStep(X, y, W, b, learn_rate)
         boundary_lines.append((-W[0] / W[1], -b / W[1]))
     return boundary_lines
-
