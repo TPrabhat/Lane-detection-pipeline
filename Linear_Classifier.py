@@ -1,10 +1,6 @@
 import numpy as np
 import csv
 
-with open('data.csv') as csvfile:
-    readCSV = csv.reader(csvfile, delimiter=',')
-    for row in readCSV:
-        print(row)
 
 # Setting the random seed, feel free to change it and see different solutions.
 np.random.seed(42)
@@ -58,3 +54,15 @@ def trainPerceptronAlgorithm(X, y, learn_rate=0.01, num_epochs=75):
         W, b = perceptronStep(X, y, W, b, learn_rate)
         boundary_lines.append((-W[0] / W[1], -b / W[1]))
     return boundary_lines
+
+
+with open('data.csv') as csvfile:
+    readCSV = csv.reader(csvfile, delimiter=',')
+    X1 = np.array([])
+    X2 = []
+    y = []
+    for row in readCSV:
+        np.append(X1,row[0],0)
+        X2.append(row[1])
+        y.append(row[2])
+    print (X1)
