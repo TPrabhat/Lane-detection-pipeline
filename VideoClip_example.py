@@ -131,9 +131,9 @@ def process_image(image):
 
     # Specify the region of interest
     left_bottom = (0, 540)
-    right_bottom = (960, 54)
-    left_top = (430, 7)
-    right_top = (530, 70)
+    right_bottom = (960, 540)
+    left_top = (430, 15)
+    right_top = (530, 15)
 
     points = np.array([left_bottom, right_bottom, right_top, left_top])
 
@@ -159,11 +159,11 @@ def process_image(image):
 #test_image = mpimg.imread('/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/exit-ramp.jpg')
 #process_image(test_image)
 
-white_output = '/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test_videos_output'
+white_output = '/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test_videos_output/output.mp4'
 
 clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/solidWhiteRight.mp4")
 white_clip = clip1.fl_image(process_image) #NOTE: this function expects color images!!
-white_clip.write_videofile(white_output, audio=False)
+white_clip.write_videofile(white_output, codec = 'mpeg4', audio=False)
 
 HTML("""
 <video width="960" height="540" controls>
