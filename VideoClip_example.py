@@ -108,50 +108,36 @@ def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """
     return cv2.addWeighted(initial_img, α, img, β, λ)
 
-def process_image (img):
+def process_image(image):
+    # NOTE: The output you return should be a color image (3 channel) for processing video below
+    # TODO: put your pipeline here,
+    # you should return the final output (image where lines are drawn on lanes)
 
-    image = img
-    # Display the image
-    #plt.subplot(121)
-    #plt.imshow(image)
-    #plt.show()
+    img = image
     # Create a copy
-    img_copy = np.copy(image)
+    img_copy = np.copy(img)
 
     # Convert to grayscale
     gray = grayscale(img_copy)
-    #plt.subplot(332)
-    #plt.imshow(gray)
-    #plt.show()
 
     # Define a kernel size and apply Gaussian smoothing
     kernel_size = 3
     blur_gray = gaussian_blur(gray, kernel_size)
-    #plt.subplot(333)
-    #plt.imshow(blur_gray)
-    #plt.show()
 
     # Define our parameters for Canny and apply
     low_threshold = 50
     high_threshold = 150
     masked_edges = canny(blur_gray, low_threshold, high_threshold)
-    #plt.subplot(334)
-    #plt.imshow(masked_edges)
-    #plt.show()
 
     # Specify the region of interest
     left_bottom = (0, 540)
-    right_bottom = (960, 540)
-    left_top = (430, 320)
-    right_top = (530,320)
+    right_bottom = (960, 54)
+    left_top = (430, 7)
+    right_top = (530, 70)
 
     points = np.array([left_bottom, right_bottom, right_top, left_top])
 
     clipped_image = region_of_interest(masked_edges, [points])
-    # Display the image
-    #plt.subplot(335)
-    #plt.imshow(clipped_image)
-    #plt.show()
 
     # Define the Hough transform parameters
     # Make a blank the same size as our image to draw on
@@ -163,17 +149,11 @@ def process_image (img):
 
     # Run Hough on edge detected image
     lines = hough_lines(clipped_image, rho, theta, threshold, min_line_length, max_line_gap)
-    #plt.subplot(336)
-    #plt.imshow(lines)
-    #plt.show()
 
     # Draw the lines on the edge image
-    combo = weighted_img(lines, img_copy, 0.5, 1, 0)
-    #plt.subplot(122)
-    #plt.imshow(combo)
-    #plt.show()
+    result = weighted_img(lines, img_copy, 0.5, 1, 0)
 
-    return combo
+    return result
 
 # Read in the image
 #test_image = mpimg.imread('/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/exit-ramp.jpg')
@@ -184,3 +164,9 @@ white_output = '/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test_vide
 clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/solidWhiteRight.mp4")
 white_clip = clip1.fl_image(process_image) #NOTE: this function expects color images!!
 white_clip.write_videofile(white_output, audio=False)
+
+HTML("""
+<video width="960" height="540" controls>
+  <source src="{0}">
+</video>
+""".format(white_output))
