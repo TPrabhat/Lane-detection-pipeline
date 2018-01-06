@@ -52,7 +52,7 @@ def region_of_interest(img, vertices):
     return masked_image
 
 
-def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
+def draw_lines(img, lines, color=[255, 0, 0], thickness=12):
     """
     NOTE: this is the function you might want to use as a starting point once you want to
     average/extrapolate the line segments you detect to map out the full
@@ -68,10 +68,34 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
     Lines are drawn on the image inplace (mutates the image).
     If you want to make the lines semi-transparent, think about combining
     this function with the weighted_img() function below
-    """
+
     for line in lines:
         for x1, y1, x2, y2 in line:
             cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+    """
+    slope_left = []
+    slope_right = []
+    c_left = []
+    c_right = []
+    for line in lines:
+        for x1, y1, x2, y2 in line:
+            m = (y2 - y1) / (x2 - x1)
+            if -1 < m < -0.3:
+                slope_left.append(m)
+                c_left.append(y1 - m * x1)
+            elif 1 > m > 0.3:
+                slope_right.append(m)
+                c_right.append(y1 - m * x1)
+
+    if len(c_left) > 0 and len(slope_left) > 0:
+        x_min = (left_bottom[1] - np.nanmean(c_left)) / np.nanmean(slope_left)
+        x_left = (left_top[1] - np.nanmean(c_left)) / np.nanmean(slope_left)
+        cv2.line(img, (int(x_left), left_top[1]), (int(x_min), left_bottom[1]), color, thickness)
+
+    if len(c_right) > 0 and len(slope_right) > 0:
+        x_max = (right_bottom[1] - np.nanmean(c_right)) / np.nanmean(slope_right)
+        x_right = (right_top[1] - np.nanmean(c_right)) / np.nanmean(slope_right)
+        cv2.line(img, (int(x_right), right_top[1]), (int(x_max), right_bottom[1]), color, thickness)
 
 
 def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
@@ -141,10 +165,10 @@ for image in test_cases:
     #plt.show()
 
     # Specify the region of interest
-    left_bottom = (0, 540)
-    right_bottom = (960, 540)
-    left_top = (430, 260)
-    right_top = (530,260)
+    left_bottom = (50, 520)
+    right_bottom = (910, 520)
+    left_top = (430, 340)
+    right_top = (530, 340)
 
     points = np.array([left_bottom, right_bottom, right_top, left_top])
 

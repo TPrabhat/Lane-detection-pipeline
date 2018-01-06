@@ -12,8 +12,8 @@ import os
 
 # define region of interest globally
 # the origin is the top left of the image
-left_bottom = (0, 540)
-right_bottom = (960, 540)
+left_bottom = (50, 520)
+right_bottom = (910, 520)
 left_top = (430, 340)
 right_top = (530, 340)
 
@@ -66,6 +66,16 @@ def region_of_interest(img, vertices):
 
 def draw_lines(img, lines, color=[255, 0, 0], thickness=12):
 
+    """"
+    The following routine has been modified to average out the draw lines function
+
+    First the slope of each and every line from the frame is computed.
+    The slope is separated into the left half and the right half od the image/video
+    the bias, which is a constant, is computed as an average of all the parallel lines in one half of the image
+    The x co-ordinates of the far min of the line and the far maximum of the line is calculated for each half odf the image
+    A line is drawn from the far x,y to the far right x,y co ordinate
+    """
+    # define arrays to calculate
     slope_left = []
     slope_right = []
     c_left = []
@@ -73,10 +83,10 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=12):
     for line in lines:
         for x1, y1, x2, y2 in line:
             m = (y2-y1)/(x2-x1)
-            if m < -0.3:
+            if -1 < m < -0.3:
                 slope_left.append(m)
                 c_left.append(y1 - m * x1)
-            elif m > 0.3:
+            elif 1 > m > 0.3:
                 slope_right.append(m)
                 c_right.append(y1 - m * x1)
 
@@ -170,7 +180,9 @@ def process_image(image):
 
 white_output = '/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test_videos_output/output.mp4'
 
-clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/solidWhiteRight.mp4")
+clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/solidYellowLeft.mp4")
+#clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/solidWhiteRight.mp4")
+#clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/challenge.mp4")
 white_clip = clip1.fl_image(process_image) #NOTE: this function expects color images!!
 white_clip.write_videofile(white_output, codec = 'mpeg4', audio=False)
 
