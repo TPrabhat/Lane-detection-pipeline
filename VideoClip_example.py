@@ -10,6 +10,13 @@ import numpy as np
 import cv2
 import os
 
+# define region of interest globally
+# the origin is the top left of the image
+left_bottom = (0, 540)
+right_bottom = (960, 540)
+left_top = (430, 340)
+right_top = (530, 340)
+
 
 def grayscale(img):
     """Applies the Grayscale transform
@@ -57,27 +64,31 @@ def region_of_interest(img, vertices):
     return masked_image
 
 
-def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
-    """
-    NOTE: this is the function you might want to use as a starting point once you want to
-    average/extrapolate the line segments you detect to map out the full
-    extent of the lane (going from the result shown in raw-lines-example.mp4
-    to that shown in P1_example.mp4).
+def draw_lines(img, lines, color=[255, 0, 0], thickness=12):
 
-    Think about things like separating line segments by their
-    slope ((y2-y1)/(x2-x1)) to decide which segments are part of the left
-    line vs. the right line.  Then, you can average the position of each of
-    the lines and extrapolate to the top and bottom of the lane.
-
-    This function draws `lines` with `color` and `thickness`.
-    Lines are drawn on the image inplace (mutates the image).
-    If you want to make the lines semi-transparent, think about combining
-    this function with the weighted_img() function below
-    """
+    slope_left = []
+    slope_right = []
+    c_left = []
+    c_right = []
     for line in lines:
         for x1, y1, x2, y2 in line:
-            cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+            m = (y2-y1)/(x2-x1)
+            if m < -0.3:
+                slope_left.append(m)
+                c_left.append(y1 - m * x1)
+            elif m > 0.3:
+                slope_right.append(m)
+                c_right.append(y1 - m * x1)
 
+    if len(c_left) > 0 and len(slope_left) > 0:
+        x_min = (left_bottom[1] - np.nanmean(c_left))/np.nanmean(slope_left)
+        x_left = (left_top[1] - np.nanmean(c_left))/np.nanmean(slope_left)
+        cv2.line(img, (int(x_left), left_top[1]), (int(x_min), left_bottom[1]), color, thickness)
+
+    if len(c_right) > 0 and len(slope_right) > 0:
+        x_max = (right_bottom[1] - np.nanmean(c_right))/np.nanmean(slope_right)
+        x_right = (right_top[1] - np.nanmean(c_right))/np.nanmean(slope_right)
+        cv2.line(img, (int(x_right), right_top[1]), (int(x_max), right_bottom[1]), color, thickness)
 
 def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
     """
@@ -129,12 +140,6 @@ def process_image(image):
     high_threshold = 150
     masked_edges = canny(blur_gray, low_threshold, high_threshold)
 
-    # Specify the region of interest
-    left_bottom = (0, 540)
-    right_bottom = (960, 540)
-    left_top = (430, 15)
-    right_top = (530, 15)
-
     points = np.array([left_bottom, right_bottom, right_top, left_top])
 
     clipped_image = region_of_interest(masked_edges, [points])
@@ -156,8 +161,12 @@ def process_image(image):
     return result
 
 # Read in the image
-#test_image = mpimg.imread('/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/exit-ramp.jpg')
-#process_image(test_image)
+#test_image = mpimg.imread('/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test.jpg')
+#combo = process_image(test_image)
+
+
+#plt.imshow(combo)
+#plt.show()
 
 white_output = '/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test_videos_output/output.mp4'
 
