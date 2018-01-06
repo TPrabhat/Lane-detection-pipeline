@@ -42,8 +42,7 @@ def region_of_interest(img, vertices):
         ignore_mask_color = (255,) * channel_count
     else:
         ignore_mask_color = 255
-    / home / prabhat /.PyCharmCE2017
-    .3 / config / scratches / HoughT.py
+
     # filling pixels inside the polygon defined by "vertices" with the fill color
     cv2.fillPoly(mask, vertices, ignore_mask_color)
 
@@ -52,7 +51,7 @@ def region_of_interest(img, vertices):
     return masked_image
 
 
-def draw_lines(img, lines, color=[255, 0, 0], thickness=15):
+def draw_lines(img, lines, color=[255, 0, 0], thickness=12):
     """
     NOTE: this is the function you might want to use as a starting point once you want to
     average/extrapolate the line segments you detect to map out the full
@@ -69,9 +68,29 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=15):
     If you want to make the lines semi-transparent, think about combining
     this function with the weighted_img() function below
     """
+    slope = []
+    slope_left = []
+    slope_right = []
+    minx, maxx = 0, 0
     for line in lines:
         for x1, y1, x2, y2 in line:
-            cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+            #cv2.line(img, (x1, y1), (x2, y2), color, thickness)
+            slope.append((y2-y1)/(x2-x1))
+            minx, maxx = np.amin(lines), np.amax(lines)
+    for idx in range(len(slope)):
+            if slope[idx] > 0:
+                slope_right.append(slope[idx])
+            else:
+                slope_left.append(slope[idx])
+
+    x_left = int(minx - (left_bottom[1] - left_top[1])/(np.average(slope_left)))
+    x_right = int(maxx - (left_bottom[1] - left_top[1])/(np.average(slope_right)))
+    cv2.line(img, (x_left, left_top[1]), (minx, left_bottom[1]), color, thickness)
+    cv2.line(img, (x_right, right_top[1]), (maxx, left_bottom[1]), color, thickness)
+
+    #print(minx, maxx, x_left, x_right, np.average(slope_right), np.average(slope_left))
+    #plt.imshow(img)
+    #plt.show()
 
 
 def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
@@ -84,6 +103,7 @@ def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
                             maxLineGap=max_line_gap)
     line_img = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
     draw_lines(line_img, lines)
+    #print (lines.shape)
     return line_img
 
 
@@ -105,7 +125,8 @@ def weighted_img(img, initial_img, α, β, λ):
 
 
 # Read in the image
-image = mpimg.imread('/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/exit-ramp.jpg')
+#image = mpimg.imread('/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-images/solidWhiteRight.jpg')
+image = mpimg.imread('/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-images/exit-ramp.jpg')
 # Display the image
 #plt.subplot(121)
 #plt.imshow(image)
@@ -137,8 +158,8 @@ masked_edges = canny(blur_gray, low_threshold, high_threshold)
 # Specify the region of interest
 left_bottom = (0, 540)
 right_bottom = (960, 540)
-left_top = (430, 310)
-right_top = (530,310)
+left_top = (430, 320)
+right_top = (530, 320)
 
 points = np.array([left_bottom, right_bottom, right_top, left_top])
 
@@ -163,7 +184,7 @@ lines = hough_lines(clipped_image, rho, theta, threshold, min_line_length, max_l
 #plt.show()
 
 # Draw the lines on the edge image
-combo = weighted_img(lines, img_copy, 0.5, 1, 0)
+combo = weighted_img(lines, img_copy, 0.8, 1, 0)
 #plt.subplot(122)
 plt.imshow(combo)
 plt.show()
