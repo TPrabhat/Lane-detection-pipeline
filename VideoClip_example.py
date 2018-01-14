@@ -10,13 +10,6 @@ import numpy as np
 import cv2
 import os
 
-# define region of interest globally
-# the origin is the top left of the image
-left_bottom = (50, 520)
-right_bottom = (910, 520)
-left_top = (430, 340)
-right_top = (530, 340)
-
 
 def grayscale(img):
     """Applies the Grayscale transform
@@ -60,7 +53,10 @@ def region_of_interest(img, vertices):
     cv2.fillPoly(mask, vertices, ignore_mask_color)
 
     # returning the image only where mask pixels are nonzero
+    # use the statement below to visualize the image with the edges only. Very handy when working with videos
     masked_image = cv2.bitwise_and(img, mask)
+    #plt.imshow(masked_image)
+    #plt.show()
     return masked_image
 
 
@@ -75,6 +71,7 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=12):
     The x co-ordinates of the far min of the line and the far maximum of the line is calculated for each half odf the image
     A line is drawn from the far x,y to the far right x,y co ordinate
     """
+
     # define arrays to calculate
     slope_left = []
     slope_right = []
@@ -83,10 +80,10 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=12):
     for line in lines:
         for x1, y1, x2, y2 in line:
             m = (y2-y1)/(x2-x1)
-            if -1 < m < -0.3:
+            if -1 < m < -0.6:
                 slope_left.append(m)
                 c_left.append(y1 - m * x1)
-            elif 1 > m > 0.3:
+            elif 1 > m > 0.6:
                 slope_right.append(m)
                 c_right.append(y1 - m * x1)
 
@@ -99,6 +96,8 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=12):
         x_max = (right_bottom[1] - np.nanmean(c_right))/np.nanmean(slope_right)
         x_right = (right_top[1] - np.nanmean(c_right))/np.nanmean(slope_right)
         cv2.line(img, (int(x_right), right_top[1]), (int(x_max), right_bottom[1]), color, thickness)
+
+    #print (lines)
 
 def hough_lines(img, rho, theta, threshold, min_line_len, max_line_gap):
     """
@@ -129,9 +128,9 @@ def weighted_img(img, initial_img, α=0.8, β=1., λ=0.):
     """
     return cv2.addWeighted(initial_img, α, img, β, λ)
 
+
 def process_image(image):
     # NOTE: The output you return should be a color image (3 channel) for processing video below
-    # TODO: put your pipeline here,
     # you should return the final output (image where lines are drawn on lanes)
 
     img = image
@@ -149,7 +148,8 @@ def process_image(image):
     low_threshold = 50
     high_threshold = 150
     masked_edges = canny(blur_gray, low_threshold, high_threshold)
-
+    #plt.imshow(masked_edges)
+    #plt.show()
     points = np.array([left_bottom, right_bottom, right_top, left_top])
 
     clipped_image = region_of_interest(masked_edges, [points])
@@ -158,7 +158,7 @@ def process_image(image):
     # Make a blank the same size as our image to draw on
     rho = 1
     theta = np.pi/180
-    threshold = 20
+    threshold = 10
     min_line_length = 5
     max_line_gap = 3
 
@@ -181,13 +181,27 @@ def process_image(image):
 white_output = '/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test_videos_output/output.mp4'
 
 clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/solidYellowLeft.mp4")
-#clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/solidWhiteRight.mp4")
-#clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/challenge.mp4")
+#clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/solidWhiteRight.mp4")#.subclip(5,9)
+#clip1 = VideoFileClip("/home/prabhat/Downloads/pycharm-community-2017.3.1/bin/test-videos/challenge.mp4").subclip(2,6)
+
+# Create a snapshot from the first frame of the image to determine its dimensions
+img = clip1.get_frame(1)
+#plt.imshow(img)
+#plt.show()
+#print(np.shape(img))
+
+# define region of interest globally
+# the origin is the top left of the image
+left_bottom = (100, np.shape(img)[0] - 50)
+right_bottom = (np.shape(img)[1] - 100, np.shape(img)[0] - 50)
+left_top = (int(np.shape(img)[1]/2) - 50, int(np.shape(img)[0]/2) + 75)
+right_top = (int(np.shape(img)[1]/2) + 50, int(np.shape(img)[0]/2) + 75)
+
 white_clip = clip1.fl_image(process_image) #NOTE: this function expects color images!!
 white_clip.write_videofile(white_output, codec = 'mpeg4', audio=False)
 
 HTML("""
-<video width="960" height="540" controls>
+<video width="960" height="480" controls>
   <source src="{0}">
 </video>
 """.format(white_output))
