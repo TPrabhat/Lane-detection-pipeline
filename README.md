@@ -60,3 +60,11 @@ The cases where the current algorithm would fail is
 when the car is not between the lanes to start with
 when there is a lot of traffic and view of the lane is obstructed
 there are other items near the lanes that are being picked up into the region of interest
+
+
+Reflection:
+
+	The existing pipeline requires a region of interest to be selected/tweaked by sampling the video first. The region of interest was selected based on the input video dimensions after multiple trial and errors. So, splitting the region of interest into left region and right region would help but that would be making this pipeline specific to a certain inputs and not be general.
+	The average slope is not considering the prior. As in the slope is averaged on all the lines found on that particular frame and recalculated for the subsequent frame. Hence the reason for wigglyness. By keeping a memory of the prior slope the wigglyness can be eliminated.
+The pipeline would not work well if the car is not within the lane lines to start with. This puts more emplhasis on the region of interest.
+	The hough parameters can be tweaked further, like  min_line_length and max_line_gap to provide a more optimal solution
